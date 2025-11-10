@@ -3,6 +3,7 @@ import { createPinia } from 'pinia';
 import { createI18n } from 'vue-i18n';
 import './style.css';
 import App from './App.vue';
+import './samples/node-api';
 import router from './router';
 
 const app = createApp(App);

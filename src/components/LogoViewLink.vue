@@ -6,20 +6,16 @@ const props = defineProps<{
 }>();
 
 const imageUrl = new URL(`/src/assets/${props.imgSrc}`, import.meta.url).href;
-
-function openLink() {
-  window.electronAPI.openExternal(props.href);
-}
 </script>
 
 <template>
-  <div @click="openLink" class="cursor-pointer">
+  <a :href="props.href" target="_blank">
     <img
       :src="imageUrl"
       class="h-16 p-1.5 will-change-[filter] transition-[filter] duration-300 logo"
       :alt="props.imgAlt"
     />
-  </div>
+  </a>
 </template>
 
 <style scoped>
