@@ -22,7 +22,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8 # ou la version spécifiée dans le projet
+          version: 9 # ou la version spécifiée dans le projet
           run_install: false
 
       - name: Get pnpm store directory
