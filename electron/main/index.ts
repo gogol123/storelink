@@ -52,8 +52,8 @@ async function createWindow() {
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
       // Consider using contextBridge.exposeInMainWorld
       // Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
-      nodeIntegration: true,
-      contextIsolation: false,
+      nodeIntegration: false,
+      contextIsolation: true,
     },
   });
 
@@ -157,8 +157,8 @@ ipcMain.handle('open-win', (_, arg) => {
   const childWindow = new BrowserWindow({
     webPreferences: {
       preload,
-      nodeIntegration: true,
-      contextIsolation: false,
+      nodeIntegration: false,
+      contextIsolation: true,
     },
   });
 
@@ -166,5 +166,25 @@ ipcMain.handle('open-win', (_, arg) => {
     childWindow.loadURL(`${url}#${arg}`);
   } else {
     childWindow.loadFile(indexHtml, { hash: arg });
+  }
+});
+
+// Custom IPC handlers
+ipcMain.on('open-external', (_, url) => {
+  shell.openExternal(url);
+});
+
+ipcMain.on('show-notification-window', () => {
+  if (win) {
+    if (!win.isVisible()) {
+      win.show();
+    }
+    if (win.isMinimized()) {
+      win.restore();
+    }
+    win.focus();
+    // Temporarily make the window always on top
+    win.setAlwaysOnTop(true);
+    setTimeout(() => win.setAlwaysOnTop(false), 3000); // Revert after 3 seconds
   }
 });
