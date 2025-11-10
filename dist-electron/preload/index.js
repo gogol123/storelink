@@ -1,18 +1,4 @@
 "use strict";
-const electron = require("electron");
-electron.contextBridge.exposeInMainWorld("electronAPI", {
-  // Renderer -> Main
-  openExternal: (url) => electron.ipcRenderer.send("open-external", url),
-  openWin: (url) => electron.ipcRenderer.invoke("open-win", url),
-  showNotificationWindow: () => electron.ipcRenderer.send("show-notification-window"),
-  // Main -> Renderer
-  onTestMessage: (callback) => {
-    electron.ipcRenderer.on(
-      "main-process-message",
-      (_event, message) => callback(message)
-    );
-  }
-});
 function domReady(condition = ["complete", "interactive"]) {
   return new Promise((resolve) => {
     if (condition.includes(document.readyState)) {

@@ -1,22 +1,3 @@
-import { contextBridge, ipcRenderer } from 'electron';
-
-// ----------------------------------------------------------------------
-
-contextBridge.exposeInMainWorld('electronAPI', {
-  // Renderer -> Main
-  openExternal: (url: string) => ipcRenderer.send('open-external', url),
-  openWin: (url: string) => ipcRenderer.invoke('open-win', url),
-  showNotificationWindow: () =>
-    ipcRenderer.send('show-notification-window'),
-
-  // Main -> Renderer
-  onTestMessage: (callback: (message: string) => void) => {
-    ipcRenderer.on('main-process-message', (_event, message) =>
-      callback(message)
-    );
-  },
-});
-
 function domReady(
   condition: DocumentReadyState[] = ['complete', 'interactive']
 ) {
