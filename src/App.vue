@@ -1,11 +1,6 @@
 <script setup lang="ts">
 import LogoViewLink from './components/LogoViewLink.vue';
 
-console.log(
-  '[App.vue]',
-  `Hello world from Electron ${process.versions.electron}!`
-);
-
 const isDark = useDark();
 const toggleDark = useToggle(isDark);
 

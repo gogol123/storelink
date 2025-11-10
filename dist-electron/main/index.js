@@ -14,6 +14,8 @@ if (!electron.app.requestSingleInstanceLock()) {
   process.exit(0);
 }
 let win = null;
+let tray = null;
+let forceQuit = false;
 const preload = node_path.join(__dirname, "../preload/index.js");
 const url = process.env.VITE_DEV_SERVER_URL;
 const indexHtml = node_path.join(process.env.DIST, "index.html");
@@ -26,8 +28,8 @@ async function createWindow() {
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
       // Consider using contextBridge.exposeInMainWorld
       // Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
-      nodeIntegration: true,
-      contextIsolation: false
+      nodeIntegration: false,
+      contextIsolation: true
     }
   });
   if (process.env.VITE_DEV_SERVER_URL) {
@@ -37,19 +39,59 @@ async function createWindow() {
     win.loadFile(indexHtml);
   }
   win.webContents.on("did-finish-load", () => {
-    win == null ? void 0 : win.webContents.send("main-process-message", new Date().toLocaleString());
+    win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
   });
   win.webContents.setWindowOpenHandler(({ url: url2 }) => {
     if (url2.startsWith("https:"))
       electron.shell.openExternal(url2);
     return { action: "deny" };
   });
+  win.on("close", (event) => {
+    if (!forceQuit) {
+      event.preventDefault();
+      win == null ? void 0 : win.hide();
+    }
+  });
 }
-electron.app.whenReady().then(createWindow);
+function createTray() {
+  const iconPath = node_path.join(process.env.PUBLIC, "favicon.ico");
+  tray = new electron.Tray(iconPath);
+  const contextMenu = electron.Menu.buildFromTemplate([
+    {
+      label: "Ouvrir",
+      click: () => {
+        win == null ? void 0 : win.show();
+      }
+    },
+    {
+      label: "Statut (déconnecté)",
+      enabled: false
+    },
+    {
+      label: "Quitter",
+      click: () => {
+        forceQuit = true;
+        electron.app.quit();
+      }
+    }
+  ]);
+  tray.setToolTip("StoreLink");
+  tray.setContextMenu(contextMenu);
+  tray.on("click", () => {
+    win == null ? void 0 : win.show();
+  });
+}
+electron.app.whenReady().then(() => {
+  createWindow();
+  createTray();
+});
+electron.app.on("before-quit", () => {
+  forceQuit = true;
+});
 electron.app.on("window-all-closed", () => {
   win = null;
   if (process.platform !== "darwin")
-    electron.app.quit();
+    ;
 });
 electron.app.on("second-instance", () => {
   if (win) {
@@ -70,14 +112,30 @@ electron.ipcMain.handle("open-win", (_, arg) => {
   const childWindow = new electron.BrowserWindow({
     webPreferences: {
       preload,
-      nodeIntegration: true,
-      contextIsolation: false
+      nodeIntegration: false,
+      contextIsolation: true
     }
   });
   if (process.env.VITE_DEV_SERVER_URL) {
     childWindow.loadURL(`${url}#${arg}`);
   } else {
     childWindow.loadFile(indexHtml, { hash: arg });
+  }
+});
+electron.ipcMain.on("open-external", (_, url2) => {
+  electron.shell.openExternal(url2);
+});
+electron.ipcMain.on("show-notification-window", () => {
+  if (win) {
+    if (!win.isVisible()) {
+      win.show();
+    }
+    if (win.isMinimized()) {
+      win.restore();
+    }
+    win.focus();
+    win.setAlwaysOnTop(true);
+    setTimeout(() => win.setAlwaysOnTop(false), 3e3);
   }
 });
 //# sourceMappingURL=index.js.map
