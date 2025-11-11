@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import LogoViewLink from './components/LogoViewLink.vue';
+import NotificationToast from './components/NotificationToast.vue';
+import { useNotificationStore } from './stores/notification';
+
+const notificationStore = useNotificationStore();
 
 console.log(
   '[App.vue]',
@@ -16,6 +20,15 @@ function toggleLocales() {
   const locales = availableLocales;
   locale.value = locales[(locales.indexOf(locale.value) + 1) % locales.length];
 }
+
+// Temporary function to test the notification
+function testNotification() {
+  notificationStore.showNotification(
+    'Nouvelle commande urgente !',
+    'Une nouvelle commande prioritaire vient d\'arriver. Veuillez la traiter immédiatement.',
+    'https://example.com/order/123'
+  );
+}
 </script>
 
 <template>
@@ -23,6 +36,15 @@ function toggleLocales() {
     id="app"
     class="max-w-5xl mx-auto px-4 py-5 dark:bg-slate-800 dark:text-gray-200 min-h-screen"
   >
+    <NotificationToast
+      :visible="notificationStore.notification.visible"
+      :title="notificationStore.notification.title"
+      :message="notificationStore.notification.message"
+      :order-url="notificationStore.notification.orderUrl"
+      @close="notificationStore.hideNotification"
+      @view-order="(url) => console.log('View order:', url)"
+    />
+
     <div class="mb-6 flex items-center justify-between">
       <button @click="toggleDark()">
         <span class="ml-2">
@@ -36,6 +58,7 @@ function toggleLocales() {
         <span class="text-green-600">{{ locale }}</span>
       </button>
     </div>
+
 
     <div class="flex flex-wrap gap-5 items-center justify-center">
       <LogoViewLink
