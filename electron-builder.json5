@@ -4,16 +4,17 @@
 {
   appId: 'YourAppID',
   asar: true,
-  icon: 'public/favicon.ico',
   directories: {
     output: 'release/${version}',
   },
   files: ['dist-electron', 'dist'],
   mac: {
+    icon: 'public/icon.png',
     artifactName: '${productName}_${version}.${ext}',
     target: ['dmg'],
   },
   win: {
+    icon: 'public/favicon.ico',
     target: [
       {
         target: 'nsis',
