@@ -1,0 +1,36 @@
+import { initializeApp } from 'firebase/app';
+import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+};
+
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
+
+export const requestPermissionAndGetToken = async () => {
+  console.log('Requesting permission...');
+  const permission = await Notification.requestPermission();
+
+  if (permission === 'granted') {
+    console.log('Notification permission granted.');
+    const token = await getToken(messaging, { vapidKey: 'BBMjKS5MinghMficuTEVv4Lc8JJkmJbhwv2ASVTR7C2PHnUpjq7DGckUtpsQ2MTu6JSGlNlTwzlp-iAYAiNZXdE' });
+    return token;
+  } else {
+    console.log('Unable to get permission to notify.');
+    return null;
+  }
+};
+
+export const onMessageListener = () =>
+  new Promise((resolve) => {
+    onMessage(messaging, (payload) => {
+      resolve(payload);
+    });
+  });
