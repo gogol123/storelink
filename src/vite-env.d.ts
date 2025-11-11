@@ -5,3 +5,14 @@ declare module '*.vue' {
   const component: DefineComponent<{}, {}, any>;
   export default component;
 }
+
+interface ElectronAPI {
+  bringWindowToFront: () => void;
+  openExternalLink: (url: string) => void;
+}
+
+declare global {
+  interface Window {
+    electronAPI: ElectronAPI;
+  }
+}
