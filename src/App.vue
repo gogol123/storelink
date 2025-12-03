@@ -1,9 +1,15 @@
 <script setup lang="ts">
+import { onMounted } from 'vue';
 import LogoViewLink from './components/LogoViewLink.vue';
 import NotificationToast from './components/NotificationToast.vue';
 import { useNotificationStore } from './stores/notification';
+import { initFirebase } from './services/firebase';
 
 const notificationStore = useNotificationStore();
+
+onMounted(() => {
+  initFirebase();
+});
 
 console.log(
   '[App.vue]',
@@ -42,7 +48,7 @@ function testNotification() {
       :message="notificationStore.notification.message"
       :order-url="notificationStore.notification.orderUrl"
       @close="notificationStore.hideNotification"
-      @view-order="(url) => console.log('View order:', url)"
+      @view-order="(url: string) => console.log('View order:', url)"
     />
 
     <div class="mb-6 flex items-center justify-between">

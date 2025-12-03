@@ -1,6 +1,15 @@
 import { app, BrowserWindow, shell, ipcMain, Tray, Menu } from 'electron';
 import { release } from 'node:os';
 import { join } from 'node:path';
+import log from 'electron-log';
+import Store from 'electron-store';
+
+// Initialize electron-store
+const store = new Store();
+
+// Configure electron-log
+log.transports.file.level = 'info';
+log.info('Application starting...');
 
 // The built directory structure
 //
@@ -25,6 +34,7 @@ if (release().startsWith('6.1')) app.disableHardwareAcceleration();
 if (process.platform === 'win32') app.setAppUserModelId(app.getName());
 
 if (!app.requestSingleInstanceLock()) {
+  log.warn('Another instance is already running. Quitting.');
   app.quit();
   process.exit(0);
 }
@@ -45,8 +55,9 @@ const indexHtml = join(process.env.DIST, 'index.html');
 
 async function createWindow() {
   win = new BrowserWindow({
-    title: 'Main window',
+    title: 'StoreLink',
     icon: join(process.env.PUBLIC, 'favicon.ico'),
+    show: false, // Start hidden for Tray-First design
     webPreferences: {
       preload,
       // Secure defaults based on project requirements.
@@ -118,6 +129,8 @@ function createTray() {
 app.whenReady().then(() => {
   createWindow();
   createTray();
+  // Don't show window by default (Tray First)
+  // If first run setup is needed, it should be handled here logic-wise
 });
 
 app.on('before-quit', () => {
@@ -170,6 +183,7 @@ ipcMain.handle('open-win', (_, arg) => {
 // IPC handler to bring the window to the front.
 ipcMain.on('bring-window-to-front', () => {
   if (win) {
+    log.info('Bringing window to front due to notification.');
     if (!win.isVisible()) {
       win.show();
     }
@@ -187,5 +201,15 @@ ipcMain.on('bring-window-to-front', () => {
 
 // IPC handler to open external links.
 ipcMain.on('open-external-link', (event, url) => {
+  log.info(`Opening external link: ${url}`);
   shell.openExternal(url);
+});
+
+// IPC for Store
+ipcMain.handle('store-get', (_event, key) => {
+  return store.get(key);
+});
+
+ipcMain.handle('store-set', (_event, key, value) => {
+  store.set(key, value);
 });
