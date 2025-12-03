@@ -1,36 +1,65 @@
-import { initializeApp } from 'firebase/app';
-import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 
+// Stub for Firebase Service
+// This file would typically initialize Firebase and handle messaging
+// Since we don't have keys, we'll outline the structure.
+
+import { initializeApp } from "firebase/app";
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { useNotificationStore } from "../stores/notification";
+
+// Placeholder config - replace with real env variables
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-const app = initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
+let messaging: any = null;
 
-export const requestPermissionAndGetToken = async () => {
-  console.log('Requesting permission...');
-  const permission = await Notification.requestPermission();
+export const initFirebase = async () => {
+  try {
+    // Only initialize if config is present (prevent crashing in dev without env)
+    if (!firebaseConfig.apiKey) {
+      console.warn("Firebase config missing. Skipping initialization.");
+      return;
+    }
 
-  if (permission === 'granted') {
-    console.log('Notification permission granted.');
-    const token = await getToken(messaging, { vapidKey: 'BBMjKS5MinghMficuTEVv4Lc8JJkmJbhwv2ASVTR7C2PHnUpjq7DGckUtpsQ2MTu6JSGlNlTwzlp-iAYAiNZXdE' });
-    return token;
-  } else {
-    console.log('Unable to get permission to notify.');
-    return null;
+    const app = initializeApp(firebaseConfig);
+    messaging = getMessaging(app);
+
+    // Handle foreground messages
+    onMessage(messaging, (payload) => {
+      console.log('Message received. ', payload);
+      const notificationStore = useNotificationStore();
+
+      const title = payload.notification?.title || 'Nouvelle Notification';
+      const body = payload.notification?.body || '';
+      const link = payload.data?.link || undefined;
+
+      notificationStore.showNotification(title, body, link);
+    });
+
+    // Request permission and get token
+    // In a real app, you'd check if we already have a token stored in electron-store
+    // const storedToken = await window.electronAPI.store.get('fcmToken');
+
+    // For now, we just log it if we get it
+    try {
+        const currentToken = await getToken(messaging, { vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY });
+        if (currentToken) {
+            console.log('FCM Token:', currentToken);
+            // await window.electronAPI.store.set('fcmToken', currentToken);
+        } else {
+            console.log('No registration token available. Request permission to generate one.');
+        }
+    } catch (err) {
+        console.log('An error occurred while retrieving token. ', err);
+    }
+
+  } catch (error) {
+    console.error("Firebase initialization error:", error);
   }
 };
-
-export const onMessageListener = () =>
-  new Promise((resolve) => {
-    onMessage(messaging, (payload) => {
-      resolve(payload);
-    });
-  });

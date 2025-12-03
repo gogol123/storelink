@@ -9,6 +9,10 @@ declare module '*.vue' {
 interface ElectronAPI {
   bringWindowToFront: () => void;
   openExternalLink: (url: string) => void;
+  store: {
+    get: (key: string) => Promise<any>;
+    set: (key: string, value: any) => Promise<void>;
+  };
 }
 
 declare global {
